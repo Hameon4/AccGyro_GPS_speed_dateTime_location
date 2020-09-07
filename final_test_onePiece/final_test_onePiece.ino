@@ -4,9 +4,9 @@
 #include <Arduino_LSM6DS3.h>
 
 #define _DISABLE_TLS_
-#define USERNAME "hamalsheraifi4"
-#define DEVICE_ID "arduinoRev2"
-#define DEVICE_CREDENTIAL "first_credential"
+#define USERNAME "USERNAME"
+#define DEVICE_ID "DEVICE_ID"
+#define DEVICE_CREDENTIAL "DEVICE_CREDENTIAL"
 
 #define SSID "SSID_NAME"
 #define SSID_PASSWORD "SSID_PASSWORD"
@@ -34,10 +34,11 @@ void setup() {
     while (1);
   }
 
-  Serial.println("Acceleration in G's\t\tGyroscope in degrees/second");
-  Serial.println("X\tY\tZ\t\tX\tY\tZ");
-
-  thing["Acc_Gyro_Info"] >> [](pson &out) {
+  thing["deviceInfo"] >> [](pson & out) {
+    out["lat"] = Latitude();
+    out["lon"] = Longitude();
+    out["date"] = Date();
+    out["spd"] = speed();
     out["xA"] = xA;
     out["yA"] = yA;
     out["zA"] = zA;
@@ -45,19 +46,11 @@ void setup() {
     out["yG"] = yG;
     out["zG"] = zG;
   };
-  
-  thing["deviceInfo"] >> [](pson & out) {
-    out["lat"] = Latitude();
-    out["lon"] = Longitude();
-    out["date"] = Date();
-    out["spd"] = speed();
-  };
 }
 
 void loop() {
   thing.handle();
-
-  //Run the loop only when thier is valid data
+  //Run the loop only when there is valid data
   if (Latitude() != 1000 && Longitude() != 1000) {
     Serial.println("The location");
     Serial.print(Latitude());
@@ -67,19 +60,45 @@ void loop() {
     Serial.println(Date());
     Serial.println("The speed");
     Serial.println(speed());
+    Serial.println("Acceleration: (xA yA zA) ");
+    Acc();
+    Serial.print(xA);
+    Serial.print('\t');
+    Serial.print(yA);
+    Serial.print('\t');
+    Serial.println(zA);
+
+    Serial.print('\n');
+
+    Serial.println("Gyroscope: (xG yG zG)");
+    Gyro();
+    Serial.print(xG);
+    Serial.print('\t');
+    Serial.print(yG);
+    Serial.print('\t');
+    Serial.println(zG);
+    Serial.print('\n');
+    Serial.print("----------------------------");
+    Serial.print('\n');
 
   }
   else
     Serial.println("No Signal");
 
   smartdelay(2000);
+
 }
 
-//Function for getting the accelerometer and gyroscope values
-static float AccandGyro(){
-    IMU.readAcceleration(xA, yA, zA); 
-    IMU.readGyroscope(xG, yG, zG);
-    return xA, yA, zA, xG, yG, zG;
+//Function for getting the accelerometer values
+static float Acc() {
+  IMU.readAcceleration(xA, yA, zA);
+  return xA, yA, zA;
+}
+
+//Function for getting the gyroscope values
+static float Gyro() {
+  IMU.readGyroscope(xG, yG, zG);
+  return xG, yG, zG;
 }
 
 //Delay function
